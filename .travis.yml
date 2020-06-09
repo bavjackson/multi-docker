@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t bavjackson/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true bavjackson/react-test npm test
+
+after_success:
+  - docker build -t bavjackson/multi-client ./client
+  - docker build -t bavjackson/multi-nginx ./nginx
+  - docker build -t bavjackson/multi-server ./server
+  - docker build -t bavjackson/multi-worker ./worker
+  # Log in to docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Push images to docker hub
+  - docker push bavjackson/multi-client
+  - docker push bavjackson/multi-nginx
+  - docker push bavjackson/multi-server
+  - docker push bavjackson/multi-worker
